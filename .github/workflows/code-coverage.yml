@@ -21,6 +21,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Restore NuGet packages (for non-SDK style)
+        run: nuget restore CoverageDemo.sln
+      
       - name: Build Solution
         run: dotnet build CoverageDemo.sln --configuration Debug
 
