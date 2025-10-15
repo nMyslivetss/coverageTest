@@ -1,0 +1,84 @@
+# ================
+# Visual Studio
+# ================
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ================
+# Build outputs
+# ================
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Tt]emp/
+
+# ================
+# Test results / Coverage
+# ================
+TestResults/
+coverage/
+coveragereport/
+*.coverage
+*.coveragexml
+*.opencover.xml
+*.cobertura.xml
+
+# ================
+# NuGet packages
+# ================
+*.nupkg
+*.snupkg
+packages/
+!**/packages/build/
+!**/packages/repositories.config
+
+# ================
+# .NET Core / Tool manifests
+# ================
+*.deps.json
+*.runtimeconfig.json
+*.runtimeconfig.dev.json
+*.dll
+*.exe
+*.pdb
+
+# ================
+# Reports / Tools / Cache
+# ================
+reportgenerator/
+*.html
+*.xml
+*.json
+*.log
+*.cache
+
+# ================
+# User-specific files
+# ================
+*.db
+*.sqlite
+*.vscode/
+.idea/
+*.env
+*.local
+*.config.user
+*.env.local
+
+# ================
+# System files
+# ================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.bak
+
+# ================
+# GitHub workflows (keep)
+# ================
+!.github/
