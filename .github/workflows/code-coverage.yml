@@ -22,7 +22,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Build Solution
-        run: msbuild CoverageDemo.sln /p:Configuration=Debug
+        run: dotnet build CoverageDemo.sln --configuration Debug
 
       - name: Install tools
         run: |
