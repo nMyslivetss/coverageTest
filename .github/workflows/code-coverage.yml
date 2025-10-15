@@ -1,0 +1,50 @@
+name: Code Coverage Report
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage:
+    name: Run Coverage Analysis
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build Solution
+        run: msbuild CoverageDemo.sln /p:Configuration=Debug
+
+      - name: Install tools
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install coverlet.console
+          dotnet tool install dotnet-reportgenerator-globaltool
+
+      - name: Run Coverlet Coverage
+        run: |
+          dotnet tool run coverlet "Chipply.BusinessLogic.Tests/bin/Debug/Chipply.BusinessLogic.Tests.dll" --target "C:\Users\NikitaMyslivets\.nuget\packages\xunit.runner.console\2.4.1\tools\net472\xunit.console.exe" --targetargs "Chipply.BusinessLogic.Tests/bin/Debug/Chipply.BusinessLogic.Tests.dll" --format cobertura --output "TestResults/coverage/coverage.cobertura.xml" --include "[Chipply.BusinessLogic*]*" --exclude "[*.Tests]*,[System.*]*,[Microsoft.*]*,[xunit.*]*,[MSTest.*]*"
+
+      - name: Generate HTML Report
+        run: |
+          dotnet tool run reportgenerator -reports:"TestResults/coverage/coverage.cobertura.xml" -targetdir:"TestResults/coverage-report" -reporttypes:HtmlSummary;Cobertura
+
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: TestResults/coverage-report
+
+      - name: Add coverage summary
+        run: |
+          echo "## 🧾 Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "HTML Report available in artifact: coverage-report" >> $GITHUB_STEP_SUMMARY
