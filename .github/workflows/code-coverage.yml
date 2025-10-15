@@ -20,9 +20,19 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+          
+      - name: Install xUnit manually
+        run: |
+          nuget install xunit -Version 2.6.6 -OutputDirectory packages
+          nuget install xunit.abstractions -Version 2.0.3 -OutputDirectory packages
+          nuget install xunit.extensibility.core -Version 2.6.6 -OutputDirectory packages
+          nuget install xunit.extensibility.execution -Version 2.6.6 -OutputDirectory packages
 
+      - name: Restore NuGet packages (for non-SDK style)
+        run: nuget restore CoverageDemo.sln
+      
       - name: Build Solution
-        run: msbuild CoverageDemo.sln /p:Configuration=Debug
+        run: dotnet build CoverageDemo.sln --configuration Debug
 
       - name: Install tools
         run: |
@@ -30,13 +40,18 @@ jobs:
           dotnet tool install coverlet.console
           dotnet tool install dotnet-reportgenerator-globaltool
 
+      - name: Install xUnit Console Runner
+        run: |
+          nuget install xunit.runner.console -Version 2.4.1 -OutputDirectory tools
+
+
       - name: Run Coverlet Coverage
         run: |
-          dotnet tool run coverlet "Chipply.BusinessLogic.Tests/bin/Debug/Chipply.BusinessLogic.Tests.dll" --target "C:\Users\NikitaMyslivets\.nuget\packages\xunit.runner.console\2.4.1\tools\net472\xunit.console.exe" --targetargs "Chipply.BusinessLogic.Tests/bin/Debug/Chipply.BusinessLogic.Tests.dll" --format cobertura --output "TestResults/coverage/coverage.cobertura.xml" --include "[Chipply.BusinessLogic*]*" --exclude "[*.Tests]*,[System.*]*,[Microsoft.*]*,[xunit.*]*,[MSTest.*]*"
+          dotnet tool run coverlet "Chipply.BusinessLogic.Tests/bin/Debug/Chipply.BusinessLogic.Tests.dll" --target "tools/xunit.runner.console.2.4.1/tools/net472/xunit.console.exe" --targetargs "Chipply.BusinessLogic.Tests/bin/Debug/Chipply.BusinessLogic.Tests.dll" --format cobertura --output "TestResults/coverage/coverage.cobertura.xml" --include "[Chipply.BusinessLogic*]*" --exclude "[*.Tests]*,[System.*]*,[Microsoft.*]*,[xunit.*]*,[MSTest.*]*"
 
       - name: Generate HTML Report
         run: |
-          dotnet tool run reportgenerator -reports:"TestResults/coverage/coverage.cobertura.xml" -targetdir:"TestResults/coverage-report" -reporttypes:HtmlSummary;Cobertura
+          dotnet tool run reportgenerator -reports:"TestResults/coverage/coverage.cobertura.xml" -targetdir:"TestResults/coverage-report" -reporttypes:"HtmlSummary,Cobertura"
 
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v4
