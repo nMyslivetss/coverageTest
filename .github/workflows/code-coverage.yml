@@ -59,7 +59,50 @@ jobs:
           name: coverage-report
           path: TestResults/coverage-report
 
-      - name: Add coverage summary
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/TestResults.xml
+
+      - name: Add Coverage Summary
+        if: always()
+        shell: bash
         run: |
-          echo "## 🧾 Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
-          echo "HTML Report available in artifact: coverage-report" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧾 Code Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f TestResults/TestResults.xml ]; then
+            PASSED=$(grep -oP '(?<=<assembly.*passed=")[0-9]+' TestResults/TestResults.xml | head -1)
+            FAILED=$(grep -oP '(?<=failed=")[0-9]+' TestResults/TestResults.xml | head -1)
+            SKIPPED=$(grep -oP '(?<=skipped=")[0-9]+' TestResults/TestResults.xml | head -1)
+            TIME=$(grep -oP '(?<=time=")[0-9.]+' TestResults/TestResults.xml | head -1)
+          fi
+
+          echo "### ✅ Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|:--|:--|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Passed** | 🟢 ${PASSED:-0} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Failed** | 🔴 ${FAILED:-0} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Skipped** | ⚪ ${SKIPPED:-0} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Execution Time** | ⏱ ${TIME:-0}s |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # --- Parse coverage data ---
+          LINE=$(grep -oP '(?<=line-rate=")[0-9.]+' TestResults/coverage/coverage.cobertura.xml | head -1)
+          BRANCH=$(grep -oP '(?<=branch-rate=")[0-9.]+' TestResults/coverage/coverage.cobertura.xml | head -1)
+
+          echo "### 📊 Code Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|:--|:--|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Line Coverage** | $(awk "BEGIN {print ${LINE:-0}*100}")% |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch Coverage** | $(awk "BEGIN {print ${BRANCH:-0}*100}")% |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### 🚀 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|:--|:--|" >> $GITHUB_STEP_SUMMARY
+          echo "| 💼 coverage-report | Full HTML coverage report |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 test-results | Raw xUnit results |" >> $GITHUB_STEP_SUMMARY
+          
