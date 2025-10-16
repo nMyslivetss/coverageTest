@@ -68,41 +68,45 @@ jobs:
 
       - name: Add Coverage Summary
         if: always()
-        shell: bash
+        shell: pwsh
         run: |
-          echo "## 🧾 Code Quality Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          Write-Output "## 🧾 Code Quality Summary" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "" >> $env:GITHUB_STEP_SUMMARY
 
-          if [ -f TestResults/TestResults.xml ]; then
-            PASSED=$(grep -oP '(?<=<assembly.*passed=")[0-9]+' TestResults/TestResults.xml | head -1)
-            FAILED=$(grep -oP '(?<=failed=")[0-9]+' TestResults/TestResults.xml | head -1)
-            SKIPPED=$(grep -oP '(?<=skipped=")[0-9]+' TestResults/TestResults.xml | head -1)
-            TIME=$(grep -oP '(?<=time=")[0-9.]+' TestResults/TestResults.xml | head -1)
-          fi
+          if (Test-Path "TestResults/TestResults.xml") {
+            [xml]$xml = Get-Content "TestResults/TestResults.xml"
+            $assembly = $xml.assemblies.assembly
+            $passed = $assembly.passed
+            $failed = $assembly.failed
+            $skipped = $assembly.skipped
+            $time = $assembly.time
+          }
 
-          echo "### ✅ Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|:--|:--|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Passed** | 🟢 ${PASSED:-0} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Failed** | 🔴 ${FAILED:-0} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Skipped** | ⚪ ${SKIPPED:-0} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Execution Time** | ⏱ ${TIME:-0}s |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          Add-Content $env:GITHUB_STEP_SUMMARY "### ✅ Test Results"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| Metric | Value |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "|:--|:--|"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| **Passed** | 🟢 $($passed) |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| **Failed** | 🔴 $($failed) |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| **Skipped** | ⚪ $($skipped) |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| **Execution Time** | ⏱ $($time)s |"
+          Add-Content $env:GITHUB_STEP_SUMMARY ""
 
           # --- Parse coverage data ---
-          LINE=$(grep -oP '(?<=line-rate=")[0-9.]+' TestResults/coverage/coverage.cobertura.xml | head -1)
-          BRANCH=$(grep -oP '(?<=branch-rate=")[0-9.]+' TestResults/coverage/coverage.cobertura.xml | head -1)
+          if (Test-Path "TestResults/coverage/coverage.cobertura.xml") {
+            [xml]$cov = Get-Content "TestResults/coverage/coverage.cobertura.xml"
+            $lineRate = [math]::Round([double]$cov.coverage.'line-rate' * 100, 2)
+            $branchRate = [math]::Round([double]$cov.coverage.'branch-rate' * 100, 2)
+          }
 
-          echo "### 📊 Code Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|:--|:--|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Line Coverage** | $(awk "BEGIN {print ${LINE:-0}*100}")% |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Branch Coverage** | $(awk "BEGIN {print ${BRANCH:-0}*100}")% |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          Add-Content $env:GITHUB_STEP_SUMMARY "### 📊 Code Coverage"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| Metric | Value |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "|:--|:--|"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| **Line Coverage** | $($lineRate)% |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| **Branch Coverage** | $($branchRate)% |"
+          Add-Content $env:GITHUB_STEP_SUMMARY ""
 
-          echo "### 🚀 Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "| Artifact | Description |" >> $GITHUB_STEP_SUMMARY
-          echo "|:--|:--|" >> $GITHUB_STEP_SUMMARY
-          echo "| 💼 coverage-report | Full HTML coverage report |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🧪 test-results | Raw xUnit results |" >> $GITHUB_STEP_SUMMARY
-          
+          Add-Content $env:GITHUB_STEP_SUMMARY "### 🚀 Artifacts"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| Artifact | Description |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "|:--|:--|"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| 💼 coverage-report | Full HTML coverage report |"
+          Add-Content $env:GITHUB_STEP_SUMMARY "| 🧪 test-results | Raw xUnit results |"
