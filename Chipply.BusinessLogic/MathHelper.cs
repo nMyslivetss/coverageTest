@@ -8,5 +8,6 @@ namespace Chipply.BusinessLogic
     public class  AddClass
     {
         public int Minus(int a, int b) => a - b;
+        public int Multiply(int a, int b) => a * b;
     }
 }

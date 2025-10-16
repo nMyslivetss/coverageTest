@@ -32,7 +32,7 @@ jobs:
         run: nuget restore CoverageDemo.sln
       
       - name: Build Solution
-        run: dotnet build CoverageDemo.sln --configuration Debug
+        run: dotnet build CoverageDemo.sln --configuration Debug /p:DebugType=Full /p:DebugSymbols=true
 
       - name: Install tools
         run: |
@@ -51,20 +51,13 @@ jobs:
 
       - name: Generate HTML Report
         run: |
-          dotnet tool run reportgenerator -reports:"TestResults/coverage/coverage.cobertura.xml" -targetdir:"TestResults/coverage-report" -reporttypes:"HtmlSummary,Cobertura"
+          dotnet tool run reportgenerator -reports:"TestResults/coverage/coverage.cobertura.xml" -targetdir:"TestResults/coverage-report" -reporttypes:"Html;HtmlSummary;HtmlInline_AzurePipelines;Cobertura;Badges" -sourcedirs:"${{ github.workspace }}" -assemblyfilters:"+Chipply.BusinessLogic*" -classfilters:"-*.Tests" -verbosity:Info
 
       - name: Upload Coverage Artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: TestResults/coverage-report
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: TestResults/TestResults.xml
 
       - name: Add Coverage Summary
         if: always()
